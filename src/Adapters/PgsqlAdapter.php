@@ -6,6 +6,12 @@ use Error;
 
 class PgsqlAdapter extends AbstractAdapter
 {
+    public function convertTimezone(string $column, string $from, string $to): string
+    {
+        return "{$column} at time zone '{$from}' at time zone '{$to}')";
+    }
+
+
     public function format(string $column, string $interval): string
     {
         $format = match ($interval) {
