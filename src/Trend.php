@@ -21,6 +21,11 @@ class Trend
 
     public string $dateColumn = 'created_at';
 
+    public string $fromTimezone;
+
+    public string $toTimezone;
+
+
     public function __construct(public Builder $builder)
     {
     }
@@ -154,6 +159,15 @@ class Trend
         );
     }
 
+    public function convertTimezone(string $from, string $to): self
+    {
+        $this->fromTimezone = $from;
+        $this->toTimezone = $to;
+
+        return $this;
+    }
+
+
     protected function getSqlDate(): string
     {
         $adapter = match ($this->builder->getConnection()->getDriverName()) {
@@ -163,7 +177,16 @@ class Trend
             default => throw new Error('Unsupported database driver.'),
         };
 
-        return $adapter->format($this->dateColumn, $this->interval);
+
+        $sqlDate = isset($this->fromTimezone, $this->toTimezone)
+            ? $adapter->convertTimezone(
+                $this->dateColumn,
+                $this->fromTimezone,
+                $this->toTimezone,
+            )
+            : $this->dateColumn;
+
+        return $adapter->format($sqlDate, $this->interval);
     }
 
     protected function getCarbonDateFormat(): string
