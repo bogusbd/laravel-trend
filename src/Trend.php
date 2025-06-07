@@ -23,9 +23,22 @@ class Trend
 
     public string $dateAlias = 'date';
 
+    public string $fromTimezone;
+
+    public string $toTimezone;
+
     public function __construct(public Builder $builder)
     {
     }
+
+    public function convertTimezone(string $from, string $to): self
+    {
+        $this->fromTimezone = $from;
+        $this->toTimezone = $to;
+
+        return $this;
+    }
+
 
     public static function query(Builder $builder): self
     {
@@ -177,7 +190,15 @@ class Trend
             default => throw new Error('Unsupported database driver.'),
         };
 
-        return $adapter->format($this->dateColumn, $this->interval);
+        $sqlDate = isset($this->fromTimezone, $this->toTimezone)
+            ? $adapter->convertTimezone(
+                $this->dateColumn,
+                $this->fromTimezone,
+                $this->toTimezone,
+            )
+            : $this->dateColumn;
+
+        return $adapter->format($sqlDate, $this->interval);
     }
 
     protected function getCarbonDateFormat(): string
